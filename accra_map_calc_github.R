@@ -89,13 +89,6 @@ points(intersec.points, col="green", cex=1)
 
 points(endpoint.proj, cex=1)
 
-# intersec.points.proj[1] <- spTransform(intersec.points[1], CRS( "+init=epsg:32630" ))
-
-
-# plot(sewage[sewage$id==6, ], col = "blue", axes=TRUE)
-# points(intersec.points[1,], col="green", cex=1)
-# gIntersects(intersec.points[1,], sewage[sewage$id==6, ])
-# gIntersects(sewage[sewage$id==6, ], sewage[sewage$id==60, ])
 
 
 # distance NOT along the drain (in meters)
