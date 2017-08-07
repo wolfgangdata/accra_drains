@@ -67,7 +67,7 @@ endpoints <- lapply(slot(sewage, "lines"),
 # select endpoints of each line == intersections of drains
 # for some reason for drain 15 and 25, the endpoints are at the beginning of the df, therefore 
 #   head() is used
-pts.drain.int <- data.frame("lon" = c(-NA), "lat" = c(NA))
+pts.drain.int <- data.frame("lon" = c(NA), "lat" = c(NA))
 for (i in 1:length(endpoints)) {
         if (i == 15 | i == 25){
                 pts.drain.int[i, ] <- head(data.frame(endpoints[i]), 1)
@@ -95,10 +95,10 @@ pts.drain.beg$drain <- c(1:31)
 rownames(pts.drain.beg) <- c(1:31)
 ####################################################################################################
 
-# calculate length of each drain part
-sewage.prj
-pts.drain.int #end point
-pts.drain.beg #beginning point
+# # calculate length of each drain part
+# sewage.prj
+# pts.drain.int #end point
+# pts.drain.beg #beginning point
 
 
 # length of each drain
@@ -112,7 +112,7 @@ pts.drain.beg.sp <- SpatialPointsDataFrame(pts.drain.beg[c("lon", "lat")],
                                            proj4string=CRS("+proj=longlat +datum=WGS84"))
 pts.drain.beg.prj <- spTransform(pts.drain.beg.sp, CRS("+init=epsg:32630"))
 
-sewage.length.df <- data.frame("length" = c(-NA), "drain" = c(NA))
+sewage.length.df <- data.frame("length" = c(NA), "drain" = c(NA))
 for (i in 1:length(sewage.prj)){
         d <- gDistance(pts.drain.int.prj[i, ], pts.drain.beg.prj[i, ]) #d of beg and end point of drain
         circles.prj <- gBuffer(pts.drain.int.prj[i,], width=d, byid=TRUE)
@@ -123,7 +123,8 @@ for (i in 1:length(sewage.prj)){
 a <- c(1:12)
 b <- c(13:27)
 c <- c(28:31)
-drain.levels <- data.frame("drain"=c(a,b,c), "level"=c(rep(1,length(a)),rep(2,length(b)), rep(3,length(c))))
+drain.levels <- data.frame("drain"=c(a,b,c), 
+                           "level"=c(rep(1,length(a)),rep(2,length(b)), rep(3,length(c))))
 sewage.length.df <- left_join(sewage.length.df, drain.levels, by="drain")
 
 sewage.length.df
@@ -135,7 +136,7 @@ pts.neighb.sp <- SpatialPointsDataFrame(neighbcoord[, c("lon", "lat")],
                                         proj4string=CRS("+proj=longlat +datum=WGS84"))
 
 # distance to sewage (shortest way to line), ID2: feature line intersects with = drain id
-dist2sewagedf <- data.frame("distance" = c(-NA),"lon" = c(-NA), "lat" = c(NA), "ID2" = c(NA))
+dist2sewagedf <- data.frame("distance" = c(NA),"lon" = c(NA), "lat" = c(NA), "ID2" = c(NA))
 
 #ID2 is the feature (drain part) it intersects with
 for (i in 1:length(neighbcoord[ ,1])) {
