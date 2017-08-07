@@ -3,8 +3,11 @@
 #################################################################################
 #################################################################################
 # To Do: 
+#       [x] define start point of drains
 #       [x] define end point of drains
+#       [x] calculate length of each drain part
 #       [x] define levels of drains (1,2,3) in ArcGIS and simplify network
+
 #       [ ] identify which id of drain the point connects to
 #       [ ] identify which level drain the point connects to
 #       [x] d0 ... distance from neighborhood to first intersection of drain
@@ -43,6 +46,8 @@ sewage <- spTransform(sewage, CRS("+proj=longlat +datum=WGS84"))
 
 sewage <- sewage[order(sewage@data$id2), ]
 
+sewage.prj <- spTransform(sewage, CRS("+init=epsg:32630"))
+
 # neighborhood weighted mid point
 neighbcoord <- read.csv(paste0(getwd(), "/data/", "points_coordinates_output.csv"), sep = ",")
 
@@ -54,30 +59,87 @@ ama <- spTransform(ama, CRS("+proj=longlat +datum=WGS84"))
 
 
 
+####################################################################################################
+# all coordinates of each point for each line ----
+endpoints <- lapply(slot(sewage, "lines"), 
+                    function(x) lapply(slot(x, "Lines"), function(y) slot(y, "coords")))
+
+# select endpoints of each line == intersections of drains
+# for some reason for drain 15 and 25, the endpoints are at the beginning of the df, therefore 
+#   head() is used
+pts.drain.int <- data.frame("lon" = c(-NA), "lat" = c(NA))
+for (i in 1:length(endpoints)) {
+        if (i == 15 | i == 25){
+                pts.drain.int[i, ] <- head(data.frame(endpoints[i]), 1)
+                
+        } else {
+                pts.drain.int[i, ] <- tail(data.frame(endpoints[i]), 1)
+        }
+}
+
+pts.drain.int$drain <- c(1:31)
+rownames(pts.drain.int) <- c(1:31)
 
 
+# pts beginning of drain
+pts.drain.beg <- data.frame("lon" = c(-NA), "lat" = c(NA))
+for (i in 1:length(endpoints)) {
+        if (i == 15 | i == 25){
+                pts.drain.beg[i, ] <- tail(data.frame(endpoints[i]), 1)
+                
+        } else {
+                pts.drain.beg[i, ] <- head(data.frame(endpoints[i]), 1)
+        }
+}
+pts.drain.beg$drain <- c(1:31)
+rownames(pts.drain.beg) <- c(1:31)
+####################################################################################################
 
-# calculations ----
-dat0 <- neighbcoord
+# calculate length of each drain part
+sewage.prj
+pts.drain.int #end point
+pts.drain.beg #beginning point
+
+
+# length of each drain
+pts.drain.int.sp <- SpatialPointsDataFrame(pts.drain.int[c("lon", "lat")],
+                                           data.frame(ID=seq(1:nrow(pts.drain.int))),
+                                           proj4string=CRS("+proj=longlat +datum=WGS84"))
+pts.drain.int.prj <- spTransform(pts.drain.int.sp, CRS("+init=epsg:32630"))
+
+pts.drain.beg.sp <- SpatialPointsDataFrame(pts.drain.beg[c("lon", "lat")],
+                                           data.frame(ID=seq(1:nrow(pts.drain.beg))),
+                                           proj4string=CRS("+proj=longlat +datum=WGS84"))
+pts.drain.beg.prj <- spTransform(pts.drain.beg.sp, CRS("+init=epsg:32630"))
+
+sewage.length.df <- data.frame("length" = c(-NA), "drain" = c(NA))
+for (i in 1:length(sewage.prj)){
+        d <- gDistance(pts.drain.int.prj[i, ], pts.drain.beg.prj[i, ]) #d of beg and end point of drain
+        circles.prj <- gBuffer(pts.drain.int.prj[i,], width=d, byid=TRUE)
+        sewage.length.df[i, ] <- c(line.length(sewage.prj[i, ], circles.prj), i)
+}
+
+#add levels to drains
+a <- c(1:12)
+b <- c(13:27)
+c <- c(28:31)
+drain.levels <- data.frame("drain"=c(a,b,c), "level"=c(rep(1,length(a)),rep(2,length(b)), rep(3,length(c))))
+sewage.length.df <- left_join(sewage.length.df, drain.levels, by="drain")
+
+sewage.length.df
+####################################################################################################
 
 # neighborhoods
-pts.neighb.sp <- SpatialPointsDataFrame(dat0[, c("lon", "lat")], data.frame(ID=seq(1:nrow(dat0))),
+pts.neighb.sp <- SpatialPointsDataFrame(neighbcoord[, c("lon", "lat")], 
+                                        data.frame(ID=seq(1:nrow(neighbcoord))),
                                         proj4string=CRS("+proj=longlat +datum=WGS84"))
-sewage.prj <- spTransform(sewage, CRS("+init=epsg:32630"))
 
-# sewage.length <- c()
-# for (i in 1:length(pts.neighb.sp[ ,1])) {
-#         the.points.projected <- spTransform(pts.neighb.sp[i, ], CRS( "+init=epsg:32630" ))
-#         the.circles.projected <- gBuffer(the.points.projected, width=100, byid=TRUE)
-#         sewage.length[i] <- line.length(the.sewage.projected, the.circles.projected)
-# }
+# distance to sewage (shortest way to line), ID2: feature line intersects with = drain id
+dist2sewagedf <- data.frame("distance" = c(-NA),"lon" = c(-NA), "lat" = c(NA), "ID2" = c(NA))
 
-
-# distance to sewage + intersection point (shortest way to line)
-dist2sewagedf <- data.frame(matrix(NA, nrow=1, ncol=4))
-colnames(dist2sewagedf) <- c("distance", "lon", "lat", "ID2") #ID2 is the feature (drain part) it intersects with
-for (i in 1:length(dat0[ ,1])) {
-        dist2sewagedf[i, ] <- rbind(dist2Line(dat0[i, c("lon", "lat")], sewage)) #coordinates of intersection
+#ID2 is the feature (drain part) it intersects with
+for (i in 1:length(neighbcoord[ ,1])) {
+        dist2sewagedf[i, ] <- rbind(dist2Line(neighbcoord[i, c("lon", "lat")], sewage)) #coordinates of intersection
 }
 
 dist2sewage <- dist2sewagedf$distance
@@ -90,16 +152,71 @@ pts.neigh.drain <- SpatialPointsDataFrame(dist2sewagedf.adj[c("lon", "lat")],
                                           proj4string=CRS("+proj=longlat +datum=WGS84"))
 pts.neigh.drain.sp <- spTransform(pts.neigh.drain, CRS( "+init=epsg:32630" ))
 
-pts.neigh.drain.sp$ID2 #intersect with which drain id
+# pts.neigh.drain.sp$ID2 #intersect with which drain id
+
+
+p01 <- sewage.length.df %>% filter(drain %in% c( ))
+p02 <- sewage.length.df %>% filter(drain %in% c(1))
+p03 <- sewage.length.df %>% filter(drain %in% c(1:2))
+p04 <- sewage.length.df %>% filter(drain %in% c(1:3))
+p05 <- sewage.length.df %>% filter(drain %in% c(1:4))
+p06 <- sewage.length.df %>% filter(drain %in% c(1:5))
+p07 <- sewage.length.df %>% filter(drain %in% c(1:6))
+p08 <- sewage.length.df %>% filter(drain %in% c(1:7))
+p09 <- sewage.length.df %>% filter(drain %in% c(1:8))
+p10 <- sewage.length.df %>% filter(drain %in% c(1:9))
+p11 <- sewage.length.df %>% filter(drain %in% c(1:10))
+p12 <- sewage.length.df %>% filter(drain %in% c(1:11))
+p13 <- sewage.length.df %>% filter(drain %in% c(1))
+p14 <- sewage.length.df %>% filter(drain %in% c(1:2))
+p15 <- sewage.length.df %>% filter(drain %in% c(1:3))
+p16 <- sewage.length.df %>% filter(drain %in% c(1:4))
+p17 <- sewage.length.df %>% filter(drain %in% c(1:4, 16))
+p18 <- sewage.length.df %>% filter(drain %in% c(1:4, 16:17))
+p19 <- sewage.length.df %>% filter(drain %in% c(1:4, 16:18))
+p20 <- sewage.length.df %>% filter(drain %in% c(1:5))
+p21 <- sewage.length.df %>% filter(drain %in% c(1:5, 20))
+p22 <- sewage.length.df %>% filter(drain %in% c(1:6))
+p23 <- sewage.length.df %>% filter(drain %in% c(1:7))
+p24 <- sewage.length.df %>% filter(drain %in% c(1:8))
+p25 <- sewage.length.df %>% filter(drain %in% c(1:9))
+p26 <- sewage.length.df %>% filter(drain %in% c(1:10))
+p27 <- sewage.length.df %>% filter(drain %in% c(1:11))
+p28 <- sewage.length.df %>% filter(drain %in% c(1:5, 20))
+p29 <- sewage.length.df %>% filter(drain %in% c(1:4, 16))
+p30 <- sewage.length.df %>% filter(drain %in% c(1:4, 16:17))
+p31 <- sewage.length.df %>% filter(drain %in% c(1:4, 16:18))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# sewage.length <- c()
+# for (i in 1:length(pts.neighb.sp[ ,1])) {
+#         the.points.projected <- spTransform(pts.neighb.sp[i, ], CRS( "+init=epsg:32630" ))
+#         the.circles.projected <- gBuffer(the.points.projected, width=100, byid=TRUE)
+#         sewage.length[i] <- line.length(the.sewage.projected, the.circles.projected)
+# }
+
+
 
 
 # endpoint
 # points(-0.221109, 5.530075, cex=1)
-endpoint <- data.frame("lon" = c(-0.221109), "lat" = c(5.530075))
-endpoint.proj <- SpatialPointsDataFrame(endpoint[c("lon", "lat")],
-                                        data.frame(ID=seq(1:nrow(endpoint))),
-                                        proj4string=CRS("+proj=longlat +datum=WGS84"))
-endpoint.proj.sp <- spTransform(endpoint.proj, CRS( "+init=epsg:32630" ))
+# endpoint <- data.frame("lon" = c(-0.221109), "lat" = c(5.530075))
+# endpoint.proj <- SpatialPointsDataFrame(endpoint[c("lon", "lat")],
+#                                         data.frame(ID=seq(1:nrow(endpoint))),
+#                                         proj4string=CRS("+proj=longlat +datum=WGS84"))
+# endpoint.proj.sp <- spTransform(endpoint.proj, CRS( "+init=epsg:32630" ))
 
 
 # # plot ------
@@ -179,23 +296,9 @@ sewage.length <- line.length(the.sewage.projected, test.circles.projected)
 
 
 
-# all coordinates of each point for each line ----
-endpoints <- lapply(slot(sewage, "lines"), function(x) lapply(slot(x, "Lines"), function(y) slot(y, "coords")))
 
-# select endpoints of each line == intersections of drains
-# for some reason for drain 15 and 25, the endpoints are at the beginning of the df, therefore head() is used
-pts.drain.int <- data.frame("lon" = c(-NA), "lat" = c(NA))
-for (i in 1:length(endpoints)) {
-        if (i == 15 | i == 25){
-                pts.drain.int[i, ] <- head(data.frame(endpoints[i]), 1)
-                
-        } else {
-                pts.drain.int[i, ] <- tail(data.frame(endpoints[i]), 1)
-        }
-}
 
-pts.drain.int$drain <- c(1:31)
-rownames(pts.drain.int) <- c(1:31)
+
 # #plot to check points
 # points(df, col = "blue")
 # with(df, text(df, labels = df$drain))
@@ -248,7 +351,6 @@ points(p.48)
 points(pts.drain.int[pts.drain.int$drain == 3, ])
 points(pts.drain.int[pts.drain.int$drain == 4, ])
 
-
 # # calculate intersections based on drain lines [obsolete now]
 # combi <- read.csv(paste0(getwd(), "/data/", "combinations.csv"), sep = ",")
 # 
@@ -260,5 +362,7 @@ points(pts.drain.int[pts.drain.int$drain == 4, ])
 # }
 # 
 # ii$iter <- liist
+
+
 
 
