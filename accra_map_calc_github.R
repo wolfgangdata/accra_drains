@@ -189,17 +189,49 @@ p30 <- sewage.length.df %>% filter(drain %in% c(1:4, 16:17))
 p31 <- sewage.length.df %>% filter(drain %in% c(1:4, 16:18))
 
 
+# test for calculating intsersection point all the way to the end point
+testpoint <- dist2sewagedf$ID2[18] #14
+
+pts.drain.int[pts.drain.int$drain == testpoint, ]
+
+plot(sewage, col = "blue", axes=TRUE)
+points(pts.neigh.drain[18,], col="orange", cex=1)
 
 
+#pts.neigh.drain
 
+# sewage.part.length.df <- data.frame("length" = c(NA), "drain" = c(NA))
+# for (i in 1:length(sewage.prj)){
+#         d <- gDistance(pts.drain.int.prj[14, ], pts.neigh.drain.sp[1, ]) #d of beg and end point of drain
+#         circles.prj <- gBuffer(pts.drain.int.prj[14,], width=d, byid=TRUE)
+#         sewage.part.length.df[1, ] <- c(line.length(sewage.prj[14, ], circles.prj), 1)
+# }
 
+sewage.part.length.df <- data.frame("length" = c(NA), "drain" = c(NA), "iteration" = c(NA))
+for (i in 1:length(sewage.prj)){
+        d <- gDistance(pts.drain.int.prj[dist2sewagedf$ID2[i], ], pts.neigh.drain.sp[i, ])
+        circles.prj <- gBuffer(pts.drain.int.prj[dist2sewagedf$ID2[i],], width=d, byid=TRUE)
+        sewage.part.length.df[i, ] <- c(line.length(sewage.prj[dist2sewagedf$ID2[i], ], circles.prj), dist2sewagedf$ID2[i], i)
+}
 
+sewage.part.length.df <- left_join(sewage.part.length.df, drain.levels, by="drain")
 
+sewage.part.length.df$iteration <- NULL
 
+### 
+df <- data.frame("length"=c(), "drain"=c(), "level"=c(), "iteration"=c())
 
+for (i in 1:length(sewage.part.length.df[, 1])){
+        nr <- sewage.part.length.df$drain[i]
+        name <- paste0("p", sprintf("%02d", nr))
+        sewage.t.length.df <- rbind(get(name), sewage.part.length.df[i, ])
+        sewage.t.length.df$iteration <- i
+        df <- rbind(df, sewage.t.length.df)
+}
 
+df
 
-
+df1 <- df %>% group_by(iteration) %>% summarise(length=sum(length))
 
 # sewage.length <- c()
 # for (i in 1:length(pts.neighb.sp[ ,1])) {
