@@ -2,8 +2,16 @@
 # Drains & Neighborhoods - Accra, Ghana
 #***********************************************************************************************
 # Functionality: 
-#       [1] define start point of drains
-#       [ ] 
+#       [1] define end point of drains
+#       [2] define start point of drains
+#       [3] length of each drain section
+#       [4] define drain levels
+#       [5] define connectivity of drains
+#       [6] calculate neighb. point intersection with drains
+#       [7] calculate length of intersection [6] to end point of drain section
+#       [8] combine [7] with rest of drain "route" to end point 
+#       [9] return data frame 
+#
 # TODO(W): wrap code into function, so random xy-points can be entered, then calculated
 # TODO(W): cut sewer segment at intersection point as separate - for plotting
 
@@ -19,7 +27,6 @@ lapply(packages, library, character.only = TRUE)
 
 setwd("H:/GitHub/accra_drains/")
 source(paste0(getwd(), "/", "helper_length_calc.R"))
-
 
 
 # load data ----
@@ -110,33 +117,7 @@ sewage.length.df <- left_join(sewage.length.df, drain.levels, by="drain")
 # sewage.length.df$test3 <- sewage.length.df$test2 - sewage.length.df$length
 #***********************************************************************************************
 
-
-# neighborhoods
-pts.neighb.sp <- SpatialPointsDataFrame(neighbcoord[, c("lon", "lat")], 
-                                        data.frame(ID=seq(1:nrow(neighbcoord))),
-                                        proj4string=CRS("+proj=longlat +datum=WGS84"))
-
-# distance to sewage (shortest way to line), ID2: feature line intersects with = drain id
-dist2sewagedf <- data.frame("distance" = c(NA),"lon" = c(NA), "lat" = c(NA), "ID2" = c(NA))
-
-#ID2 is the feature (drain part) it intersects with
-for (i in 1:length(neighbcoord[ ,1])) {
-        dist2sewagedf[i, ] <- rbind(dist2Line(neighbcoord[i, c("lon", "lat")], sewage)) #coordinates of intersection
-}
-
-# dist2sewage <- dist2sewagedf$distance
-
-# take out neighborhoods that are too far away
-# dist2sewagedf.adj <- dist2sewagedf %>% filter(!distance > 1500)
-
-pts.neigh.drain <- SpatialPointsDataFrame(dist2sewagedf[c("lon", "lat")], 
-                                          data.frame(ID=seq(1:nrow(dist2sewagedf)), ID2 = dist2sewagedf$ID2),
-                                          proj4string=CRS("+proj=longlat +datum=WGS84"))
-pts.neigh.drain.sp <- spTransform(pts.neigh.drain, CRS( "+init=epsg:32630" ))
-
-# pts.neigh.drain.sp$ID2 #intersect with which drain id
-
-# connection of each drain to reach end point
+# connections of each drain to reach end point
 p01 <- sewage.length.df %>% filter(drain %in% c( ))
 p02 <- sewage.length.df %>% filter(drain %in% c(1))
 p03 <- sewage.length.df %>% filter(drain %in% c(1:2))
@@ -170,6 +151,34 @@ p30 <- sewage.length.df %>% filter(drain %in% c(1:4, 16:17))
 p31 <- sewage.length.df %>% filter(drain %in% c(1:4, 16:18))
 #***********************************************************************************************
 
+
+# where the function should start --------------------------------------------------------------
+# neighborhoods
+pts.neighb.sp <- SpatialPointsDataFrame(neighbcoord[, c("lon", "lat")], 
+                                        data.frame(ID=seq(1:nrow(neighbcoord))),
+                                        proj4string=CRS("+proj=longlat +datum=WGS84"))
+
+# distance to sewage (shortest way to line), ID2: feature line intersects with = drain ID
+dist2sewagedf <- data.frame("distance" = c(NA),"lon" = c(NA), "lat" = c(NA), "ID2" = c(NA))
+
+# distance + coordinates of intersection + drain ID
+for (i in 1:length(neighbcoord[ ,1])) {
+        dist2sewagedf[i, ] <- rbind(dist2Line(neighbcoord[i, c("lon", "lat")], sewage)) 
+}
+
+# dist2sewage <- dist2sewagedf$distance
+
+# take out neighborhoods that are too far away
+# dist2sewagedf.adj <- dist2sewagedf %>% filter(!distance > 1500)
+
+pts.neigh.drain <- SpatialPointsDataFrame(dist2sewagedf[c("lon", "lat")], 
+                                          data.frame(ID=seq(1:nrow(dist2sewagedf)), ID2 = dist2sewagedf$ID2),
+                                          proj4string=CRS("+proj=longlat +datum=WGS84"))
+pts.neigh.drain.sp <- spTransform(pts.neigh.drain, CRS( "+init=epsg:32630" ))
+
+# pts.neigh.drain.sp$ID2 #intersect with which drain id
+
+
 # calculate each small part of id'd section. from intersection to end point of section.
 sewage.part.length.df <- data.frame("length" = c(NA), "drain" = c(NA), "iteration" = c(NA))
 for (i in 1:length(pts.neigh.drain)){
@@ -179,11 +188,12 @@ for (i in 1:length(pts.neigh.drain)){
                                         pts.neigh.drain.sp$ID2[i], i)
 }
 
+# add drain levels
 sewage.part.length.df <- left_join(sewage.part.length.df, drain.levels, by="drain")
 sewage.part.length.df$iteration <- NULL
 
 
-# add lenghts of all drains to beginning section for each iteration until endpoint reached
+# add lenghts of all drains to start section for each iteration until endpoint reached
 sewage.total.df <- data.frame("length"=c(), "drain"=c(), "level"=c(), "iteration"=c())
 for (i in 1:length(sewage.part.length.df[, 1])){
         nr <- sewage.part.length.df$drain[i]
@@ -201,9 +211,9 @@ df1 <- sewage.total.df %>% group_by(iteration) %>% summarise(length=sum(length))
 
 
 
-df <- dist2sewagedf
-df$distance <- NULL
-sum(duplicated(df, incomparables = FALSE))
+# df <- dist2sewagedf
+# df$distance <- NULL
+# sum(duplicated(df, incomparables = FALSE))
 
 
 #***********************************************************************************************
@@ -253,3 +263,7 @@ xy <- as.data.frame(sewage[sewage$id2==3, ], xy=TRUE)
 xy <- as.data.frame(sewage[1,], xy=TRUE) 
 
 plot(sewage[sewage$id2==3, ])
+
+
+
+point2end(data.frame("lon" = c(-0.2179323, -0.2179325), "lat" = c(5.560829, 5.660829)))
