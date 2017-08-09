@@ -186,7 +186,7 @@ for (i in 1:length(pts.neigh.drain)){
         circles.prj <- gBuffer(pts.drain.end.prj[pts.neigh.drain.sp$ID2[i],], width=d, byid=TRUE)
         sewage.part.length.df[i, ] <- c(line.length(sewage.prj[pts.neigh.drain.sp$ID2[i], ], circles.prj), 
                                         pts.neigh.drain.sp$ID2[i], i)
-}
+        }
 
 # add drain levels
 sewage.part.length.df <- left_join(sewage.part.length.df, drain.levels, by="drain")
@@ -201,7 +201,7 @@ for (i in 1:length(sewage.part.length.df[, 1])){
         sewage.t.length.df <- rbind(get(name), sewage.part.length.df[i, ])
         sewage.t.length.df$iteration <- i
         sewage.total.df <- rbind(sewage.total.df, sewage.t.length.df)
-}
+        }
 
 sewage.total.df
 
