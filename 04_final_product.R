@@ -37,25 +37,25 @@ df <- point2end(neighbcoord)
 
 
 # #***********************************************************************************************
-# test 
-point2end(data.frame("lon" = c(-0.1579323, -0.2179325, -0.2579425), "lat" = c(5.560829, 5.660829, 5.580829)))
-
-#
-lon <- as.numeric(format(runif(50, -.26, -0.15), digits = 7))
-lat <- as.numeric(format(runif(50, 5.53, 5.67), digits = 7))
-test.longlat <- data.frame(lon, lat)
-test.df <- point2end(test.longlat)
-
-plot(sewage, col = "lightblue", axes=TRUE)
-points(pts.neighb.sp, col="red", pch=20, cex=1)
-points(pts.neigh.drain, col="green", pch=10, cex=1) #closest point to drain
-
-
-plot(sewage[sewage$id2 == 14, ], col = "lightblue", axes=TRUE)
-points(pts.neighb.sp[pts.neighb.sp$ID==1, ], col="blue", pch=20, cex=1)
-points(pts.neigh.drain[pts.neigh.drain$ID==1, ], col="yellow", pch=10, cex=1) #closest point to drain
-
-df %>% filter(iteration == 1)
+# # test 
+# point2end(data.frame("lon" = c(-0.1579323, -0.2179325, -0.2579425), "lat" = c(5.560829, 5.660829, 5.580829)))
+# 
+# #
+# lon <- as.numeric(format(runif(50, -.26, -0.15), digits = 7))
+# lat <- as.numeric(format(runif(50, 5.53, 5.67), digits = 7))
+# test.longlat <- data.frame(lon, lat)
+# test.df <- point2end(test.longlat)
+# 
+# plot(sewage, col = "lightblue", axes=TRUE)
+# points(pts.neighb.sp, col="red", pch=20, cex=1)
+# points(pts.neigh.drain, col="green", pch=10, cex=1) #closest point to drain
+# 
+# 
+# plot(sewage[sewage$id2 == 14, ], col = "lightblue", axes=TRUE)
+# points(pts.neighb.sp[pts.neighb.sp$ID==1, ], col="blue", pch=20, cex=1)
+# points(pts.neigh.drain[pts.neigh.drain$ID==1, ], col="yellow", pch=10, cex=1) #closest point to drain
+# 
+# df %>% filter(iteration == 1)
 
 
 # #***********************************************************************************************
@@ -104,40 +104,40 @@ df %>% filter(iteration == 1)
 
 
 
-
-plot(circles.prj1, add=T, col=4)
-
-line <- gIntersection(circles.prj, sewage.prj[sewage.prj$id2 == 14, ], byid=c(TRUE, TRUE))
-line <- spTransform(line, CRS('+proj=longlat'))
-plot(line1, add= T)
-
-###
-d <- gDistance(pts.drain.end.prj[pts.neigh.drain.sp$ID2[2], ], pts.neigh.drain.sp[2, ])
-circles.prj <- gBuffer(pts.drain.end.prj[pts.neigh.drain.sp$ID2[2],], width=d, byid=TRUE)
-# circles.prj <- spTransform(circles.prj, CRS('+proj=longlat'))
-
-plot(circles.prj, add=T)
-
-line <- gIntersection(circles.prj, sewage.prj[sewage.prj$id2 == 22, ], byid=c(TRUE, TRUE))
-line <- spTransform(line, CRS('+proj=longlat'))
-plot(line, add= T)
+# 
+# plot(circles.prj1, add=T, col=4)
+# 
+# line <- gIntersection(circles.prj, sewage.prj[sewage.prj$id2 == 14, ], byid=c(TRUE, TRUE))
+# line <- spTransform(line, CRS('+proj=longlat'))
+# plot(line1, add= T)
+# 
+# ###
+# d <- gDistance(pts.drain.end.prj[pts.neigh.drain.sp$ID2[2], ], pts.neigh.drain.sp[2, ])
+# circles.prj <- gBuffer(pts.drain.end.prj[pts.neigh.drain.sp$ID2[2],], width=d, byid=TRUE)
+# # circles.prj <- spTransform(circles.prj, CRS('+proj=longlat'))
+# 
+# plot(circles.prj, add=T)
+# 
+# line <- gIntersection(circles.prj, sewage.prj[sewage.prj$id2 == 22, ], byid=c(TRUE, TRUE))
+# line <- spTransform(line, CRS('+proj=longlat'))
+# plot(line, add= T)
 # #***********************************************************************************************
 
 
 
-# Plot example
-plot(sewage, col = "lightblue", axes=TRUE)
-points(pts.neighb.sp, col="red", pch=20, cex=1)
-points(pts.neigh.drain, col="green", pch=10, cex=1) #closest point to drain
-
-
-# plot(sewage[sewage$id2 == 14, ], col = "lightblue", axes=TRUE)
-points(pts.neighb.sp[pts.neighb.sp$ID==1, ], col="blue", pch=20, cex=1)
-points(pts.neigh.drain[pts.neigh.drain$ID==1, ], col="orange", pch=10, cex=1) #closest point to drain
-plot(sewage.part[sewage.part$ID == 2, ], col = "blue", axes=TRUE, add=TRUE)
-# plot(sewage[sewage$id2 == 2, ], col = "lightblue", axes=TRUE, add=TRUE)
-plot(sewage.part[sewage.part$ID == 8, ], col = "blue", axes=TRUE, add=TRUE)
-
+# # Plot example
+# plot(sewage, col = "lightblue", axes=TRUE)
+# points(pts.neighb.sp, col="red", pch=20, cex=1)
+# points(pts.neigh.drain, col="green", pch=10, cex=1) #closest point to drain
+# 
+# 
+# # plot(sewage[sewage$id2 == 14, ], col = "lightblue", axes=TRUE)
+# points(pts.neighb.sp[pts.neighb.sp$ID==1, ], col="blue", pch=20, cex=1)
+# points(pts.neigh.drain[pts.neigh.drain$ID==1, ], col="orange", pch=10, cex=1) #closest point to drain
+# plot(sewage.part[sewage.part$ID == 2, ], col = "blue", axes=TRUE, add=TRUE)
+# # plot(sewage[sewage$id2 == 2, ], col = "lightblue", axes=TRUE, add=TRUE)
+# plot(sewage.part[sewage.part$ID == 8, ], col = "blue", axes=TRUE, add=TRUE)
+# 
 
 
 # plotting process:
@@ -162,7 +162,6 @@ for (i in 1:length(pts.neigh.drain)){
         }
         dev.off()
 }
-
 
 
 

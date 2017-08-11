@@ -61,8 +61,8 @@ point2end <- function(neighbcoord){
         circles.prj1 <- gBuffer(pts.drain.end.prj[pts.neigh.drain.sp$ID2[1],], width=d, byid=TRUE)
         circles.prj1 <- spTransform(circles.prj1, CRS('+proj=longlat +datum=WGS84'))
         circles.prj1$iteration <- 99
-        sewage.part <<- gIntersection(circles.prj1[1,], sewage[sewage$id2 == circles.prj1$ID[1], ], byid=c(TRUE, TRUE))
-        sewage.part$drainID <- pts.neigh.drain.sp$ID2[1]
+        sewage.part <- gIntersection(circles.prj1[1,], sewage[sewage$id2 == circles.prj1$ID[1], ], byid=c(TRUE, TRUE))
+        sewage.part$drainID <- 99
         sewage.part$iteration <- 99
         
         for (i in 1:length(pts.neigh.drain)){
@@ -75,15 +75,19 @@ point2end <- function(neighbcoord){
                 circles.prj$iteration <- i
                 circles.prj1 <- rbind(circles.prj1, circles.prj)
                 
-                line2 <- gIntersection(circles.prj1[i,], sewage[sewage$id2 == circles.prj1$ID[i], ], byid=c(TRUE, TRUE))
+                
+                d <- gDistance(pts.drain.end.prj[pts.neigh.drain.sp$ID2[i], ], pts.neigh.drain.sp[i, ])
+                circles.prj <- gBuffer(pts.drain.end.prj[pts.neigh.drain.sp$ID2[i],], width=d, byid=TRUE)
+                circles.prj <- spTransform(circles.prj, CRS('+proj=longlat +datum=WGS84'))
+                line2 <- gIntersection(circles.prj, sewage[sewage$id2 == circles.prj$ID, ], byid=c(TRUE, TRUE))
                 line2$drainID <- pts.neigh.drain.sp$ID2[i]
                 line2$iteration <- i
-                sewage.part <<- rbind(sewage.part, line2)
+                sewage.part <- rbind(sewage.part, line2)
         }
         
         # delete initial entries from above
         circles.prj1 <- circles.prj1[!circles.prj1$iteration == 99, ]
-        sewage.part <- sewage.part[!sewage.part$iteration == 99, ]
+        sewage.part <<- sewage.part[!sewage.part$iteration == 99, ]
         
         
         # add drain levels

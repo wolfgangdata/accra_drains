@@ -10,7 +10,7 @@ linepoints <- lapply(slot(sewage, "lines"),
 #   head() is used
 pts.drain.end <- data.frame("lon" = c(NA), "lat" = c(NA))
 for (i in 1:length(linepoints)) {
-        if (i == 15 | i == 25){
+        if (i == 15 | i == 25 | i == 7 | i == 8){
                 pts.drain.end[i, ] <- head(data.frame(linepoints[i]), 1)
                 
         } else {
@@ -25,7 +25,7 @@ rownames(pts.drain.end) <- c(1:31)
 # pts beginning of drain
 pts.drain.start <- data.frame("lon" = c(-NA), "lat" = c(NA))
 for (i in 1:length(linepoints)) {
-        if (i == 15 | i == 25){
+        if (i == 15 | i == 25 | i ==  7 | i == 8){
                 pts.drain.start[i, ] <- tail(data.frame(linepoints[i]), 1)
                 
         } else {
