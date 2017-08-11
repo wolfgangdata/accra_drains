@@ -104,9 +104,8 @@ df %>% filter(iteration == 1)
 
 
 
-# circles.prj <- spTransform(circles.prj, CRS('+proj=longlat'))
 
-plot(circles.prj, add=T, col=4)
+plot(circles.prj1, add=T, col=4)
 
 line <- gIntersection(circles.prj, sewage.prj[sewage.prj$id2 == 14, ], byid=c(TRUE, TRUE))
 line <- spTransform(line, CRS('+proj=longlat'))
@@ -137,37 +136,49 @@ points(pts.neighb.sp[pts.neighb.sp$ID==1, ], col="blue", pch=20, cex=1)
 points(pts.neigh.drain[pts.neigh.drain$ID==1, ], col="orange", pch=10, cex=1) #closest point to drain
 plot(sewage.part[sewage.part$ID == 2, ], col = "blue", axes=TRUE, add=TRUE)
 # plot(sewage[sewage$id2 == 2, ], col = "lightblue", axes=TRUE, add=TRUE)
-plot(sewage.part[sewage.part$ID == 2, ], col = "blue", axes=TRUE, add=TRUE)
+plot(sewage.part[sewage.part$ID == 8, ], col = "blue", axes=TRUE, add=TRUE)
+
 
 
 # plotting process:
-point <- 66
-
-df[df$iteration == point, ]
-plot.lines <- df[df$iteration == point, ]$drain
-max <- length(plot.lines)
-plot.lines.reg <- plot.lines[-max]
-
 plot(sewage, col = "lightblue", axes=TRUE)
-points(pts.neighb.sp[pts.neighb.sp$ID==point, ], col="blue", pch=20, cex=1)
-points(pts.neigh.drain[pts.neigh.drain$ID==point, ], col="orange", pch=10, cex=1) #closest point to drain
-plot(sewage.part[sewage.part$iteration == point, ] , col = "blue", axes=TRUE, add=TRUE)
-for (i in plot.lines.reg){
-        plot(sewage[sewage$id2 == i, ], col = "blue", axes=TRUE, add=TRUE)
+
+for (i in 1:length(pts.neigh.drain)){
+        point <- i
+        df[df$iteration == point, ]
+        plot.lines <- df[df$iteration == point, ]$drain
+        max <- length(plot.lines)
+        plot.lines.reg <- plot.lines[-max]
+        
+        png(paste0(getwd(), "/plots1/", paste0("map_", i, ".png") ))
+        
+        plot(sewage, col = "lightblue", axes=TRUE)
+        points(pts.neighb.sp[pts.neighb.sp$ID==point, ], col="blue", pch=20, cex=1)
+        points(pts.neigh.drain[pts.neigh.drain$ID==point, ], col="orange", pch=10, cex=1) #closest point to drain
+        plot(sewage.part[sewage.part$iteration == point, ] , col = "blue", axes=TRUE, add=TRUE)
+        
+        for (i in plot.lines.reg){
+                plot(sewage[sewage$id2 == i, ], col = "blue", axes=TRUE, add=TRUE)
+        }
+        dev.off()
 }
 
 
 
 
-# plot(circles.prj1[circles.prj1$iteration == 70, ], axes=TRUE, add=TRUE)
 
 
-plot(sewage[sewage$id2 == 8, ], col = "blue", axes=TRUE, add=TRUE)
-plot(sewage[sewage$id2 == 7, ], col = "blue", axes=TRUE, add=TRUE)
-plot(sewage[sewage$id2 == 6, ], col = "blue", axes=TRUE, add=TRUE)
-plot(sewage[sewage$id2 == 5, ], col = "blue", axes=TRUE, add=TRUE)
-plot(sewage[sewage$id2 == 4, ], col = "blue", axes=TRUE, add=TRUE)
-plot(sewage[sewage$id2 == 3, ], col = "blue", axes=TRUE, add=TRUE)
-plot(sewage[sewage$id2 == 2, ], col = "blue", axes=TRUE, add=TRUE)
-plot(sewage[sewage$id2 == 1, ], col = "blue", axes=TRUE, add=TRUE)
+linepoints[8]
+head(data.frame(linepoints[8]), 1)
+points(-0.2226169, 5.542091)
+points(-0.2289952, 5.629334)
 
+points(head(data.frame(linepoints[8]), 1))
+points(tail(data.frame(linepoints[8]), 1))
+
+points(head(data.frame(linepoints[25]), 1))
+points(tail(data.frame(linepoints[25]), 1))
+
+plot(circles.prj1[circles.prj1$iteration == 7, ], axes=TRUE, add=TRUE)
+
+plot(line2, add=T)

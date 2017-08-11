@@ -78,12 +78,12 @@ point2end <- function(neighbcoord){
                 line2 <- gIntersection(circles.prj1[i,], sewage[sewage$id2 == circles.prj1$ID[i], ], byid=c(TRUE, TRUE))
                 line2$drainID <- pts.neigh.drain.sp$ID2[i]
                 line2$iteration <- i
-                sewage.part <- rbind(sewage.part, line2)
+                sewage.part <<- rbind(sewage.part, line2)
         }
         
         # delete initial entries from above
-        circles.prj1 <- circles.prj1[-1,]
-        sewage.part <- sewage.part[-1,]
+        circles.prj1 <- circles.prj1[!circles.prj1$iteration == 99, ]
+        sewage.part <- sewage.part[!sewage.part$iteration == 99, ]
         
         
         # add drain levels
