@@ -40,7 +40,6 @@ df <- point2end(neighbcoord)
 # # test 
 # point2end(data.frame("lon" = c(-0.1579323, -0.2179325, -0.2579425), "lat" = c(5.560829, 5.660829, 5.580829)))
 # 
-# #
 # lon <- as.numeric(format(runif(50, -.26, -0.15), digits = 7))
 # lat <- as.numeric(format(runif(50, 5.53, 5.67), digits = 7))
 # test.longlat <- data.frame(lon, lat)
@@ -140,8 +139,8 @@ df <- point2end(neighbcoord)
 # 
 
 
-# plotting process:
-plot(sewage, col = "lightblue", axes=TRUE)
+# plotting process ----
+plot(sewage, col = "lightblue3", axes=TRUE)
 
 for (i in 1:length(pts.neigh.drain)){
         point <- i
@@ -150,34 +149,84 @@ for (i in 1:length(pts.neigh.drain)){
         max <- length(plot.lines)
         plot.lines.reg <- plot.lines[-max]
         
-        png(paste0(getwd(), "/plots1/", paste0("map_", i, ".png") ))
-        
-        plot(sewage, col = "lightblue", axes=TRUE)
-        points(pts.neighb.sp[pts.neighb.sp$ID==point, ], col="blue", pch=20, cex=1)
-        points(pts.neigh.drain[pts.neigh.drain$ID==point, ], col="orange", pch=10, cex=1) #closest point to drain
-        plot(sewage.part[sewage.part$iteration == point, ] , col = "blue", axes=TRUE, add=TRUE)
-        
-        for (i in plot.lines.reg){
-                plot(sewage[sewage$id2 == i, ], col = "blue", axes=TRUE, add=TRUE)
+        if (i < 10) {
+                png(paste0(getwd(), "/plots/", paste0("map_0", i, ".png") ))
+                
+                plot(sewage, col = "lightblue", axes=TRUE)
+                points(pts.neighb.sp[pts.neighb.sp$ID==point, ], col="blue", pch=20, cex=1)
+                points(pts.neigh.drain[pts.neigh.drain$ID==point, ], col="orange", pch=10, cex=1) #closest point to drain
+                plot(sewage.part[sewage.part$iteration == point, ] , col = "blue", axes=TRUE, add=TRUE)
+                
+                for (i in plot.lines.reg){
+                        plot(sewage[sewage$id2 == i, ], col = "blue", axes=TRUE, add=TRUE)
+                }
+                
+                dev.off()
+                
+        } else {
+                
+                png(paste0(getwd(), "/plots/", paste0("map_", i, ".png") ))
+                
+                plot(sewage, col = "lightblue", axes=TRUE)
+                points(pts.neighb.sp[pts.neighb.sp$ID==point, ], col="blue", pch=20, cex=1)
+                points(pts.neigh.drain[pts.neigh.drain$ID==point, ], col="orange", pch=10, cex=1) #closest point to drain
+                plot(sewage.part[sewage.part$iteration == point, ] , col = "blue", axes=TRUE, add=TRUE)
+                
+                for (i in plot.lines.reg){
+                        plot(sewage[sewage$id2 == i, ], col = "blue", axes=TRUE, add=TRUE)
+                }
+                
+                dev.off()
         }
-        dev.off()
+        
 }
 
 
 
 
 
-linepoints[8]
-head(data.frame(linepoints[8]), 1)
-points(-0.2226169, 5.542091)
-points(-0.2289952, 5.629334)
 
-points(head(data.frame(linepoints[8]), 1))
-points(tail(data.frame(linepoints[8]), 1))
 
-points(head(data.frame(linepoints[25]), 1))
-points(tail(data.frame(linepoints[25]), 1))
+# plotting with random numbers ----
+lon <- as.numeric(format(runif(50, -.26, -0.15), digits = 7))
+lat <- as.numeric(format(runif(50, 5.53, 5.67), digits = 7))
+test.longlat <- data.frame(lon, lat)
+test.df <- point2end(test.longlat)
 
-plot(circles.prj1[circles.prj1$iteration == 7, ], axes=TRUE, add=TRUE)
-
-plot(line2, add=T)
+df <- test.df
+for (i in 1:length(test.longlat[, 1])){
+        point <- i
+        df[df$iteration == point, ]
+        plot.lines <- df[df$iteration == point, ]$drain
+        max <- length(plot.lines)
+        plot.lines.reg <- plot.lines[-max]
+        
+        if (i < 10) {
+                png(paste0(getwd(), "/plots_random/", paste0("map_0", i, ".png") ))
+                
+                plot(sewage, col = "lightblue", axes=TRUE)
+                points(pts.neighb.sp[pts.neighb.sp$ID==point, ], col="blue", pch=20, cex=1)
+                points(pts.neigh.drain[pts.neigh.drain$ID==point, ], col="orange", pch=10, cex=1) #closest point to drain
+                plot(sewage.part[sewage.part$iteration == point, ] , col = "blue", axes=TRUE, add=TRUE)
+                
+                for (i in plot.lines.reg){
+                        plot(sewage[sewage$id2 == i, ], col = "blue", axes=TRUE, add=TRUE)
+                }
+                dev.off()
+                
+        } else {
+                
+                png(paste0(getwd(), "/plots_random/", paste0("map_", i, ".png") ))
+                
+                plot(sewage, col = "lightblue", axes=TRUE)
+                points(pts.neighb.sp[pts.neighb.sp$ID==point, ], col="blue", pch=20, cex=1)
+                points(pts.neigh.drain[pts.neigh.drain$ID==point, ], col="orange", pch=10, cex=1) #closest point to drain
+                plot(sewage.part[sewage.part$iteration == point, ] , col = "blue", axes=TRUE, add=TRUE)
+                
+                for (i in plot.lines.reg){
+                        plot(sewage[sewage$id2 == i, ], col = "blue", axes=TRUE, add=TRUE)
+                }
+                dev.off()
+        }
+        
+}

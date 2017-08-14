@@ -105,6 +105,8 @@ point2end <- function(neighbcoord){
                 sewage.total.df <- rbind(sewage.total.df, sewage.t.length.df)
         }
         
+        
+        
         sewage.total.df
         
         
