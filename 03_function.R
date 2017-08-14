@@ -48,6 +48,8 @@ point2end <- function(neighbcoord){
                 dist2sewagedf[i, ] <- rbind(dist2Line(neighbcoord[i, c("lon", "lat")], sewage)) 
         }
         
+        dist2sewagedf <<- dist2sewagedf
+        
         pts.neigh.drain <<- SpatialPointsDataFrame(dist2sewagedf[c("lon", "lat")], 
                                           data.frame(ID=seq(1:nrow(dist2sewagedf)), ID2 = dist2sewagedf$ID2),
                                           proj4string=CRS("+proj=longlat +datum=WGS84"))
