@@ -1,4 +1,5 @@
 library(deSolve)
+
 ## Define as a function
 SIRBD <- function(pars){
 
@@ -36,9 +37,9 @@ test.pars <- c(beta = 1/30, recovery = 1/30, death = 0.001, birth = 0.001)
 results   <- SIRBD(test.pars)
 
 ##############################################################################
-## Plotting
-matplot(results[, 1], results[, 2:4], type="l", lty=1)
-legend("topright", col=1:3, legend=c("S", "I", "R"), lwd=1)
+# ## Plotting
+# matplot(results[, 1], results[, 2:4], type="l", lty=1)
+# legend("topright", col=1:3, legend=c("S", "I", "R"), lwd=1)
 
 ##############################################################################
 #simulation for time course infectious numbers;
@@ -93,10 +94,10 @@ patho.count <- function(N.pop, beta, recovery, death, birth, days, N.shed, r, p)
 
 test <- patho.count(N.pop=10000,beta=0.04,recovery=1/30,death=0.001,birth=0.001,days=1000,N.shed=10^7,r=5,p=1/3)
 
-n.days = 1000
-infect.res <- simul.infect(10000, 0.04, 1/30, 0.001, 0.001, n.days)[-(1:30), ]
-mat.shed <- shed(N.shed, r = 5, p = 1/3, days = n.days)
-patho.cnt <- rowSums(infect.res * mat.shed)
+# n.days = 1000
+# infect.res <- simul.infect(10000, 0.04, 1/30, 0.001, 0.001, n.days)[-(1:30), ]
+# mat.shed <- shed(N.shed, r = 5, p = 1/3, days = n.days)
+# patho.cnt <- rowSums(infect.res * mat.shed)
 
 #Exponential Decay Function;
 #Input two parameters: number of initial microbes, time in hours.
