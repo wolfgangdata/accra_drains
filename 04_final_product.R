@@ -239,11 +239,10 @@ df <- point2end(neighbcoord)
 source(paste0(getwd(), "/", "endemic.R"))
 
 
+# neighborhood to drain: liquid sewage + decay
+# enter drain to end point
 
 
-# 
-#1 calculate time from neighb. to drain
-#2 initial microbes in neighb.
 
 # we assume a water/ drain flow rate of 10,000m per day
 v <- 10000
@@ -255,7 +254,7 @@ dist2sewagedf$time <- (dist2sewagedf$distance / v.d0)  * 24
 
 
 
-# pathogens for all neighborhoods
+# pathogens for each neighborhood
 p.neighb <- c()
 p.neighb.list <- list()
 n.pop <- neighb$p_total
@@ -266,18 +265,54 @@ for (i in 1:length(n.pop)){
 }
 
 
+# liquid waste and time for d0 ... calculate N1
+liquid.waste <- neighb$waste_liquid_sewage
+
+# decay from neighborhood to drain + % liquid waste
+decay.d0 <- c()
+for (v in 1:length(p.neighb.list)){
+        N0 <- list()
+        N00 <- c()
+        # pathogens that are disposed via liquid waste into sewer
+        N0[[v]] <- round(p.neighb.list[[v]] * liquid.waste[v])
+        
+        # decay of pathogens to the "main" drain
+        for (i in 1:lengths(p.neighb.list[v])) {
+                N00[i] <- ex_decay(N0[[v]][i], dist2sewagedf$time[v])
+        }
+        
+        decay.d0[[v]] <- N00
+}
+
+
+# # check math
+# pathogens <- round(p.neighb.list[[1]][1] * neighb$waste_liquid_sewage[1])
+# pathogens <- ex_decay(pathogens, dist2sewagedf$time[1])
+# pathogens
+# decay.d0[[1]][1]
+# # --> check
+
+
+# use pathogen values from previous step
+p.neighb.list <- decay.d0
 
 # decay
+# repeat same step as above, decay of pathogens when inside drain until endpoint is reached
+# time needed to reach end point (based on assumptions above)
 decay.neighb <- c()
 time.total <- c()
+
 for (u in 1:length(p.neighb.list)){
-        # for one neighborhood
         decay.1.neighb <- c()
+                
+        # for one neighborhood, sum of all lenths until end point = calc sum of time
         for (i in 1:lengths(p.neighb.list[u])) {
                 decay.1.neighb[i] <- ex_decay(p.neighb.list[[u]][i], sum(df$time[df$iteration == u ]) )
         }
+        
         # time total for each point to reach endpoint in hours
         time.total[u] <- sum(df$time[df$iteration == u ])
+        
         # for all neighborhoods
         decay.neighb[[u]] <- decay.1.neighb 
 }
