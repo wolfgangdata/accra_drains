@@ -318,3 +318,125 @@ for (u in 1:length(p.neighb.list)){
         decay.neighb[[u]] <- decay.1.neighb 
 }
 
+dist2sewagedf$time
+decay.neighb
+
+# time in drain/ terrain for each neighborhood
+summary.df <- data.frame("time_drain"=c(NA), "time_terrain"=c(NA), "meter_drain"=c(NA), "pathogens_day1"=c(NA), "iteration"=c(NA))
+for (i in 1:max(df$iteration)){
+        summary.df[i, ] <- c(sum(df$time[df$iteration == i]), dist2sewagedf$time[i], sum(df$length[df$iteration == i]), 
+                             decay.neighb[[i]][1], i)
+}
+
+summary.df$time_drain <- round(summary.df$time_drain, 2)
+summary.df$time_terrain <- round(summary.df$time_terrain, 2)
+summary.df$meter_drain <- round(summary.df$meter_drain, 2)
+
+
+
+
+###### part to figure out how to calculate pathogens per drain section
+
+#N1
+path.drain <- decay.d0
+
+#sort df by origin to end point for calculation
+df <- df[with(df, order(iteration, -drain)), ]
+
+# initial number of pathogen in first drain
+pathog.initial <- data.frame("pathogen"=c(NA), "drain"=c(NA), "iteration"=c(NA))
+
+for (i in unique(df$iteration)){
+        df %>% filter(iteration == i) %>%
+        .$drain -> drains
+        # pathogen count, and time
+        # initial drain
+        pathog.initial[i,] <- c(ex_decay(path.drain[[i]][1], df$time[df$iteration == i & df$drain == max(drains)]), 
+                                max(drains), i)
+        # next drains
+        }
+
+# test bla bla blaaaaaaaaaaaaa   
+for (i in unique(df$iteration)){
+        df %>% filter(iteration == 1) %>%
+                .$drain -> drains
+        # remove first element of drain chain
+        drains <- drains[drains != max(drains)]
+        length(drains)
+        pathog.drains <- c()
+        for (u in 1:length(drains)){
+        # first 1 is the iteration, second one first row ...i..............................i.....................u
+        pathog.drains[1] <- ex_decay(pathog.initial[pathog.initial$iteration == 1, 1], 
+                                  df$time[df$iteration == 1 & df$drain == drains[1]])   
+        pathog.drains[2] <- ex_decay(pathog.drains[1], 
+                                     df$time[df$iteration == 1 & df$drain == drains[1]])  
+        }
+        
+}
+
+patho.part[1, ] <- c(ex_decay(path.drain[[1]][1], df$time[df$iteration == 1 & df$drain == 14]), 14)
+patho.part[2, ] <- c(ex_decay(patho.part[1,1], df$time[df$iteration == 1 & df$drain == 2]), 2)
+patho.part[3, ] <- c(ex_decay(patho.part[2,1], df$time[df$iteration == 1 & df$drain == 1]), 1)
+
+# neighb1, day1
+df$drain[df$iteration == 2]
+df$time[df$iteration == 1 & df$drain == 14]
+
+#    [[neighb]][day]
+path.drain[[2]][1]
+
+# pathogens for each step
+# function structure: ex_decay(pathogen, time)
+pathoN01 <- path.drain[[1]][1]
+patho14 <- ex_decay(pathoN01, df$time[df$iteration == 1 & df$drain == 14])
+patho02 <- ex_decay(patho14, df$time[df$iteration == 1 & df$drain == 2])
+patho01 <- ex_decay(patho02, df$time[df$iteration == 1 & df$drain == 1])
+patho01
+
+patho01 <- c()
+get(paste0("patho0", 1)) <- 1
+
+
+patho.part <- data.frame("patho" = c(NA), "drain" = c(NA))
+for (i in 1:nrow(df)) { #drain parts
+        for (u in 1:max(df$iteration)){ #neighb
+                for (v in df$drain[df$iteration == u]) { #drains
+                        patho.part[i, ] <- c(ex_decay(path.drain[[u]][1], df$time[df$iteration == u & df$drain == v]), v)
+                                        }
+        }
+}
+
+
+patho.part <- data.frame("patho" = c(NA), "drain" = c(NA))
+for (i in 1:3) { #drain parts
+        # for (u in 2){ #neighb
+                for (v in length(df$drain[df$iteration == 1])) { #drains
+                        patho.part[i, ] <- ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == df$drain[df$iteration == 1]])
+                }
+        }
+}
+
+
+
+patho.part[i, ] <- c(ex_decay(pathoN01, df$time[df$iteration == u & df$drain == v]), v)
+
+for (v in df$drain[df$iteration == u]){
+        print(v)
+}
+
+
+patho.part[1, ] <- c(ex_decay(path.drain[[1]][1], df$time[df$iteration == 1 & df$drain == 14]), 14)
+patho.part[2, ] <- c(ex_decay(patho.part[1,1], df$time[df$iteration == 1 & df$drain == 2]), 2)
+patho.part[3, ] <- c(ex_decay(patho.part[2,1], df$time[df$iteration == 1 & df$drain == 1]), 1)
+
+patho.part[4, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 1]), 1)
+patho.part[5, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 2]), 2)
+patho.part[6, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 3]), 3)
+patho.part[7, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 4]), 4)
+patho.part[8, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 5]), 5)
+patho.part[9, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 6]), 6)
+patho.part[10, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 22]), 22)
+
+sum(patho.part$patho[patho.part$drain == 1])
+sum(patho.part$patho[patho.part$drain == 2])
+sum(patho.part$patho[patho.part$drain == 3])

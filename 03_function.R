@@ -88,7 +88,7 @@ point2end <- function(neighbcoord){
         }
         
         # delete initial entries from above
-        circles.prj1 <- circles.prj1[!circles.prj1$iteration == 99, ]
+        circles.prj1 <<- circles.prj1[!circles.prj1$iteration == 99, ]
         sewage.part <<- sewage.part[!sewage.part$iteration == 99, ]
         
         
