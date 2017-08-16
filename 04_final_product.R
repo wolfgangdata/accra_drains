@@ -1,7 +1,15 @@
-# accra
+#***********************************************************************************************
+# Drains & Neighborhoods - Accra, Ghana
+#***********************************************************************************************
+# Functionality: 
+#       [1] define end point of drains
+#
+# TODO(W): cut sewer segment at intersection point as separate - for plotting
 
-
-
+#***********************************************************************************************
+# Note: data abreviations
+# .sp  ... spatially adjusted with spTransform
+# .prj ... projected with CRS("+init=epsg:32630")
 
 
 
@@ -187,63 +195,17 @@ df <- point2end(neighbcoord)
 # 
 # 
 # 
-# #***********************************************************************************************
-# # plotting with random numbers ----
-# lon <- as.numeric(format(runif(50, -.26, -0.15), digits = 7))
-# lat <- as.numeric(format(runif(50, 5.53, 5.67), digits = 7))
-# test.longlat <- data.frame(lon, lat)
-# test.df <- point2end(test.longlat)
-# 
-# df <- test.df
-# for (i in 1:length(test.longlat[, 1])){
-#         point <- i
-#         df[df$iteration == point, ]
-#         plot.lines <- df[df$iteration == point, ]$drain
-#         max <- length(plot.lines)
-#         plot.lines.reg <- plot.lines[-max]
-#         
-#         if (i < 10) {
-#                 png(paste0(getwd(), "/plots_random/", paste0("map_0", i, ".png") ))
-#                 
-#                 plot(sewage, col = "lightblue", axes=TRUE)
-#                 points(pts.neighb.sp[pts.neighb.sp$ID==point, ], col="blue", pch=20, cex=1)
-#                 points(pts.neigh.drain[pts.neigh.drain$ID==point, ], col="orange", pch=10, cex=1) #closest point to drain
-#                 plot(sewage.part[sewage.part$iteration == point, ] , col = "blue", axes=TRUE, add=TRUE)
-#                 
-#                 for (i in plot.lines.reg){
-#                         plot(sewage[sewage$id2 == i, ], col = "blue", axes=TRUE, add=TRUE)
-#                 }
-#                 dev.off()
-#                 
-#         } else {
-#                 
-#                 png(paste0(getwd(), "/plots_random/", paste0("map_", i, ".png") ))
-#                 
-#                 plot(sewage, col = "lightblue", axes=TRUE)
-#                 points(pts.neighb.sp[pts.neighb.sp$ID==point, ], col="blue", pch=20, cex=1)
-#                 points(pts.neigh.drain[pts.neigh.drain$ID==point, ], col="orange", pch=10, cex=1) #closest point to drain
-#                 plot(sewage.part[sewage.part$iteration == point, ] , col = "blue", axes=TRUE, add=TRUE)
-#                 
-#                 for (i in plot.lines.reg){
-#                         plot(sewage[sewage$id2 == i, ], col = "blue", axes=TRUE, add=TRUE)
-#                 }
-#                 dev.off()
-#         }
-#         
-# }
 
 
 
 
-
+#***********************************************************************************************
+#***********************************************************************************************
+# Endemic Part ----
 
 source(paste0(getwd(), "/", "endemic.R"))
 
-
 # neighborhood to drain: liquid sewage + decay
-# enter drain to end point
-
-
 
 # we assume a water/ drain flow rate of 10,000m per day
 v <- 10000
@@ -254,33 +216,32 @@ v.d0 <- 1000
 dist2sewagedf$time <- (dist2sewagedf$distance / v.d0)  * 24 
 
 
-
-# pathogens for each neighborhood
-p.neighb <- c()
-p.neighb.list <- list()
+# pathogens for each neighborhood for 1000 days
+pathog.neighb <- c()
+pathog.neighb.list <- list()
 n.pop <- neighb$p_total
 
 for (i in 1:length(n.pop)){
-        p.neighb <- patho.count(N.pop=n.pop[i], beta=0.04,recovery=1/30,death=0.001,birth=0.001,days=1000,N.shed=10^7,r=5,p=1/3)
-        p.neighb.list[[i]] <- p.neighb
+        pathog.neighb <- patho.count(N.pop=n.pop[i], beta=0.04, recovery=1/30, death=0.001, 
+                                birth=0.001, days=1000, N.shed=10^7, r=5, p=1/3)
+        pathog.neighb.list[[i]] <- pathog.neighb
 }
 
-# output <- matrix(unlist(p.neighb.list), ncol = 1000, byrow = TRUE)
-
+# output <- matrix(unlist(pathog.neighb.list), ncol = 1000, byrow = TRUE)
 
 # liquid waste and time for d0 ... calculate N1
 liquid.waste <- neighb$waste_liquid_sewage
 
 # decay from neighborhood to drain + % liquid waste ... N1
 decay.d0 <- c()
-for (v in 1:length(p.neighb.list)){
+for (v in 1:length(pathog.neighb.list)){
         N0 <- list()
         N00 <- c()
         # pathogens that are disposed via liquid waste into sewer
-        N0[[v]] <- round(p.neighb.list[[v]] * liquid.waste[v])
+        N0[[v]] <- round(pathog.neighb.list[[v]] * liquid.waste[v])
         
         # decay of pathogens to the "main" drain
-        for (i in 1:lengths(p.neighb.list[v])) {
+        for (i in 1:lengths(pathog.neighb.list[v])) {
                 N00[i] <- ex_decay(N0[[v]][i], dist2sewagedf$time[v])
         }
         
@@ -289,15 +250,15 @@ for (v in 1:length(p.neighb.list)){
 
 
 # # check math
-# pathogens <- round(p.neighb.list[[1]][1] * neighb$waste_liquid_sewage[1])
+# pathogens <- round(pathog.neighb.list[[1]][1] * neighb$waste_liquid_sewage[1])
 # pathogens <- ex_decay(pathogens, dist2sewagedf$time[1])
 # pathogens
 # decay.d0[[1]][1]
 # # --> check
 
-
+#***********************************************************************************************
 # use pathogen values from previous step
-p.neighb.list <- decay.d0
+pathog.neighb.list <- decay.d0
 
 # decay
 # repeat same step as above, decay of pathogens when inside drain until endpoint is reached
@@ -305,12 +266,12 @@ p.neighb.list <- decay.d0
 decay.neighb <- c()
 time.total <- c()
 
-for (u in 1:length(p.neighb.list)){
+for (u in 1:length(pathog.neighb.list)){
         decay.1.neighb <- c()
                 
         # for one neighborhood, sum of all lenths until end point = calc sum of time
-        for (i in 1:lengths(p.neighb.list[u])) {
-                decay.1.neighb[i] <- ex_decay(p.neighb.list[[u]][i], sum(df$time[df$iteration == u ]) )
+        for (i in 1:lengths(pathog.neighb.list[u])) {
+                decay.1.neighb[i] <- ex_decay(pathog.neighb.list[[u]][i], sum(df$time[df$iteration == u ]) )
         }
         
         # time total for each point to reach endpoint in hours
@@ -320,14 +281,19 @@ for (u in 1:length(p.neighb.list)){
         decay.neighb[[u]] <- decay.1.neighb 
 }
 
-dist2sewagedf$time
-decay.neighb
+# how many pathogens are there when endpoint is reached?
+pathog.endpoint.matrix <- matrix(unlist(decay.neighb), ncol = 1000, byrow = TRUE)
 
+# use this ^^ df to create map for endpoint concentration
+
+#***********************************************************************************************
 # time in drain/ terrain for each neighborhood
-summary.df <- data.frame("time_drain"=c(NA), "time_terrain"=c(NA), "meter_drain"=c(NA), "pathogens_day1"=c(NA), "iteration"=c(NA))
+summary.df <- data.frame("time_drain"=c(NA), "time_terrain"=c(NA), 
+                         "meter_drain"=c(NA), "pathogens_day1"=c(NA), "iteration"=c(NA))
+
 for (i in 1:max(df$iteration)){
-        summary.df[i, ] <- c(sum(df$time[df$iteration == i]), dist2sewagedf$time[i], sum(df$length[df$iteration == i]), 
-                             decay.neighb[[i]][1], i)
+        summary.df[i, ] <- c(sum(df$time[df$iteration == i]), dist2sewagedf$time[i], 
+                             sum(df$length[df$iteration == i]), decay.neighb[[i]][1], i)
 }
 
 summary.df$time_drain <- round(summary.df$time_drain, 2)
@@ -337,55 +303,53 @@ summary.df$meter_drain <- round(summary.df$meter_drain, 2)
 
 
 
-###### part to figure out how to calculate pathogens per drain section
+###### calculate pathogens per drain section per day
 
 #N1
 pathog.drain <- decay.d0
 
+# let's try calculating everything in matrix format here:
 pathog.drain.matrix <- matrix(unlist(pathog.drain), ncol = 1000, byrow = TRUE)
 
 #sort df by origin to end point for calculation
 df <- df[with(df, order(iteration, -drain)), ]
 
 
+# 3 levels to this for loop
+# v ... day 
+# u ... neighborhood
+# i ... drain
 
+pathog.all <- data.frame("pathogens"=c(), "drain"=c(), "iteration"=c(), "day"=c())
 
-
-pathog.drain.matrix[, 1]
-
-times <- df$time[df$iteration == 1]
-drains <- df$drain[df$iteration == 1]
-length(drains)
-dat <- ex_decay(pathog.drain.matrix[1, 1], times[1])
-dat2 <- ex_decay(dat, times[2])
-dat3 <- ex_decay(dat2, times[3])
-dat3
-
-
-
-
-# this is for one day
-# get count of initial drain in the route from neighborhood to endpoint
-#  then all the other drains
-pathog.drain.parts.all <- data.frame("pathogens"=c(), "drain"=c(), "iteration"=c())
-
-for (u in unique(df$iteration)) {
+for (v in 1:ncol(pathog.drain.matrix)) { #by day
+        pathog.drain.parts.all <- data.frame("pathogens"=c(), "drain"=c(), "iteration"=c(), "day"=c())
         
-        hours <- df$time[df$iteration == u]
-        drains <- df$drain[df$iteration == u]
-        
-        pathog.drain.parts <- data.frame(matrix(nrow = length(drains), ncol = 3))
-        colnames(pathog.drain.parts) <- c("pathogens", "drain", "iteration")
-        
-        for (i in 1:length(drains)){
-                if (i == 1) {
-                        pathog.drain.parts[i, ] <- c(ex_decay(pathog.drain.matrix[u, i], hours[i]), drains[i], u)
-                } else {
-                        pathog.drain.parts[i, ] <- c(ex_decay(pathog.drain.parts[(i-1), 1], hours[i]), drains[i], u)
+        # this is for one day
+        for (u in unique(df$iteration)) { #by neighborhood
+                
+                hours <- df$time[df$iteration == u]
+                drains <- df$drain[df$iteration == u]
+                
+                pathog.drain.parts <- data.frame(matrix(nrow = length(drains), ncol = 4))
+                colnames(pathog.drain.parts) <- c("pathogens", "drain", "iteration", "day")
+                
+                # get count of initial drain in the route from neighborhood to endpoint
+                #  then all the other drains
+                for (i in 1:length(drains)){ #by drain
+                        if (i == 1) {
+                                pathog.drain.parts[i, ] <- c(ex_decay(pathog.drain.matrix[u, v], hours[i]), drains[i], u, v)
+                        } else {
+                                pathog.drain.parts[i, ] <- c(ex_decay(pathog.drain.parts[(i-1), 1], hours[i]), drains[i], u, v)
+                        }
                 }
+                pathog.drain.parts.all <- rbind(pathog.drain.parts.all, pathog.drain.parts)
         }
-        pathog.drain.parts.all <- rbind(pathog.drain.parts.all, pathog.drain.parts)
+        pathog.all <- rbind(pathog.all, pathog.drain.parts.all)
 }
 
-df.drain <- pathog.drain.parts.all %>% dplyr::select(-iteration) %>% group_by(drain) %>% summarise(pathog_sum = sum(pathogens))
+
+# analysis ... by drain
+df.drain <- pathog.all %>% dplyr::select(-iteration) %>% filter(day == 1) %>% group_by(drain) %>% summarise(pathog_sum = sum(pathogens))
+
 
