@@ -5,11 +5,10 @@
 
 
 
-packages <- c("dplyr", "rgdal", "raster", "rgeos", "geosphere")
+packages <- c("dplyr", "rgdal", "raster", "rgeos", "geosphere", "deSolve")
 lapply(packages, library, character.only = TRUE)
 
 setwd("H:/GitHub/accra_drains/")
-source(paste0(getwd(), "/", "01_helper_length_calc.R"))
 
 
 
@@ -31,6 +30,7 @@ neighbcoord <- read.csv(paste0(getwd(), "/data/", "points_coordinates_output.csv
 # ama <- spTransform(ama, CRS("+proj=longlat +datum=WGS84"))
 # #***********************************************************************************************
 
+source(paste0(getwd(), "/", "01_helper_length_calc.R"))
 source(paste0(getwd(), "/", "02_preset_analysis_options.R"))
 source(paste0(getwd(), "/", "03_function.R"))
 
@@ -265,6 +265,8 @@ for (i in 1:length(n.pop)){
         p.neighb.list[[i]] <- p.neighb
 }
 
+# output <- matrix(unlist(p.neighb.list), ncol = 1000, byrow = TRUE)
+
 
 # liquid waste and time for d0 ... calculate N1
 liquid.waste <- neighb$waste_liquid_sewage
@@ -338,10 +340,79 @@ summary.df$meter_drain <- round(summary.df$meter_drain, 2)
 ###### part to figure out how to calculate pathogens per drain section
 
 #N1
-path.drain <- decay.d0
+pathog.drain <- decay.d0
+
+pathog.drain.matrix <- matrix(unlist(pathog.drain), ncol = 1000, byrow = TRUE)
 
 #sort df by origin to end point for calculation
 df <- df[with(df, order(iteration, -drain)), ]
+
+
+
+
+
+pathog.drain.matrix[, 1]
+
+times <- df$time[df$iteration == 1]
+drains <- df$drain[df$iteration == 1]
+length(drains)
+dat <- ex_decay(pathog.drain.matrix[1, 1], times[1])
+dat2 <- ex_decay(dat, times[2])
+dat3 <- ex_decay(dat2, times[3])
+dat3
+
+
+
+
+
+
+pathog.drain.parts.all <- data.frame("pathogens"=c(), "drain"=c())
+
+for (u in unique(df$iteration)) {
+        
+}
+hours <- df$time[df$iteration == 2]
+drains <- df$drain[df$iteration == 2]
+
+pathog.drain.parts <- data.frame(matrix(nrow = length(drains), ncol = 2))
+colnames(pathog.drain.parts) <- c("pathogens", "drain")
+
+for (i in 1:length(drains)){
+        if (i == 1) {
+                pathog.drain.parts[i, ] <- c(ex_decay(pathog.drain.matrix[2, i], hours[i]), drains[i])
+        } else {
+                pathog.drain.parts[i, ] <- c(ex_decay(pathog.drain.parts[(i-1), 1], hours[i]), drains[i])
+        }
+}
+pathog.drain.parts.all <- rbind(pathog.drain.parts.all, pathog.drain.parts)
+
+
+
+
+i =2
+i-1
+dat <- ex_decay(pathog.drain.matrix[2, 1], times[1])
+dat2 <- ex_decay(dat, times[2])
+dat3 <- ex_decay(dat2, times[3])
+dat3
+
+
+
+
+
+ex_decay(pathog.drain.matrix[1, 1], df$time[df$iteration == 1 & df$drain == drains[1]])
+
+
+
+
+
+
+
+
+
+
+
+
 
 # initial number of pathogen in first drain
 pathog.initial <- data.frame("pathogen"=c(NA), "drain"=c(NA), "iteration"=c(NA))
@@ -351,10 +422,19 @@ for (i in unique(df$iteration)){
         .$drain -> drains
         # pathogen count, and time
         # initial drain
-        pathog.initial[i,] <- c(ex_decay(path.drain[[i]][1], df$time[df$iteration == i & df$drain == max(drains)]), 
+        pathog.initial[i,] <- c(ex_decay(pathog.drain[[i]][1], df$time[df$iteration == i & df$drain == max(drains)]), 
                                 max(drains), i)
         # next drains
+        
+        
         }
+
+
+
+
+
+
+
 
 # test bla bla blaaaaaaaaaaaaa   
 for (i in unique(df$iteration)){
