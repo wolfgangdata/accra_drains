@@ -364,159 +364,28 @@ dat3
 
 
 
-
-
-pathog.drain.parts.all <- data.frame("pathogens"=c(), "drain"=c())
+# this is for one day
+# get count of initial drain in the route from neighborhood to endpoint
+#  then all the other drains
+pathog.drain.parts.all <- data.frame("pathogens"=c(), "drain"=c(), "iteration"=c())
 
 for (u in unique(df$iteration)) {
         
-}
-hours <- df$time[df$iteration == 2]
-drains <- df$drain[df$iteration == 2]
-
-pathog.drain.parts <- data.frame(matrix(nrow = length(drains), ncol = 2))
-colnames(pathog.drain.parts) <- c("pathogens", "drain")
-
-for (i in 1:length(drains)){
-        if (i == 1) {
-                pathog.drain.parts[i, ] <- c(ex_decay(pathog.drain.matrix[2, i], hours[i]), drains[i])
-        } else {
-                pathog.drain.parts[i, ] <- c(ex_decay(pathog.drain.parts[(i-1), 1], hours[i]), drains[i])
-        }
-}
-pathog.drain.parts.all <- rbind(pathog.drain.parts.all, pathog.drain.parts)
-
-
-
-
-i =2
-i-1
-dat <- ex_decay(pathog.drain.matrix[2, 1], times[1])
-dat2 <- ex_decay(dat, times[2])
-dat3 <- ex_decay(dat2, times[3])
-dat3
-
-
-
-
-
-ex_decay(pathog.drain.matrix[1, 1], df$time[df$iteration == 1 & df$drain == drains[1]])
-
-
-
-
-
-
-
-
-
-
-
-
-
-# initial number of pathogen in first drain
-pathog.initial <- data.frame("pathogen"=c(NA), "drain"=c(NA), "iteration"=c(NA))
-
-for (i in unique(df$iteration)){
-        df %>% filter(iteration == i) %>%
-        .$drain -> drains
-        # pathogen count, and time
-        # initial drain
-        pathog.initial[i,] <- c(ex_decay(pathog.drain[[i]][1], df$time[df$iteration == i & df$drain == max(drains)]), 
-                                max(drains), i)
-        # next drains
+        hours <- df$time[df$iteration == u]
+        drains <- df$drain[df$iteration == u]
         
+        pathog.drain.parts <- data.frame(matrix(nrow = length(drains), ncol = 3))
+        colnames(pathog.drain.parts) <- c("pathogens", "drain", "iteration")
         
-        }
-
-
-
-
-
-
-
-
-# test bla bla blaaaaaaaaaaaaa   
-for (i in unique(df$iteration)){
-        df %>% filter(iteration == 1) %>%
-                .$drain -> drains
-        # remove first element of drain chain
-        drains <- drains[drains != max(drains)]
-        length(drains)
-        pathog.drains <- c()
-        for (u in 1:length(drains)){
-        # first 1 is the iteration, second one first row ...i..............................i.....................u
-        pathog.drains[1] <- ex_decay(pathog.initial[pathog.initial$iteration == 1, 1], 
-                                  df$time[df$iteration == 1 & df$drain == drains[1]])   
-        pathog.drains[2] <- ex_decay(pathog.drains[1], 
-                                     df$time[df$iteration == 1 & df$drain == drains[1]])  
-        }
-        
-}
-
-patho.part[1, ] <- c(ex_decay(path.drain[[1]][1], df$time[df$iteration == 1 & df$drain == 14]), 14)
-patho.part[2, ] <- c(ex_decay(patho.part[1,1], df$time[df$iteration == 1 & df$drain == 2]), 2)
-patho.part[3, ] <- c(ex_decay(patho.part[2,1], df$time[df$iteration == 1 & df$drain == 1]), 1)
-
-# neighb1, day1
-df$drain[df$iteration == 2]
-df$time[df$iteration == 1 & df$drain == 14]
-
-#    [[neighb]][day]
-path.drain[[2]][1]
-
-# pathogens for each step
-# function structure: ex_decay(pathogen, time)
-pathoN01 <- path.drain[[1]][1]
-patho14 <- ex_decay(pathoN01, df$time[df$iteration == 1 & df$drain == 14])
-patho02 <- ex_decay(patho14, df$time[df$iteration == 1 & df$drain == 2])
-patho01 <- ex_decay(patho02, df$time[df$iteration == 1 & df$drain == 1])
-patho01
-
-patho01 <- c()
-get(paste0("patho0", 1)) <- 1
-
-
-patho.part <- data.frame("patho" = c(NA), "drain" = c(NA))
-for (i in 1:nrow(df)) { #drain parts
-        for (u in 1:max(df$iteration)){ #neighb
-                for (v in df$drain[df$iteration == u]) { #drains
-                        patho.part[i, ] <- c(ex_decay(path.drain[[u]][1], df$time[df$iteration == u & df$drain == v]), v)
-                                        }
-        }
-}
-
-
-patho.part <- data.frame("patho" = c(NA), "drain" = c(NA))
-for (i in 1:3) { #drain parts
-        # for (u in 2){ #neighb
-                for (v in length(df$drain[df$iteration == 1])) { #drains
-                        patho.part[i, ] <- ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == df$drain[df$iteration == 1]])
+        for (i in 1:length(drains)){
+                if (i == 1) {
+                        pathog.drain.parts[i, ] <- c(ex_decay(pathog.drain.matrix[u, i], hours[i]), drains[i], u)
+                } else {
+                        pathog.drain.parts[i, ] <- c(ex_decay(pathog.drain.parts[(i-1), 1], hours[i]), drains[i], u)
                 }
         }
+        pathog.drain.parts.all <- rbind(pathog.drain.parts.all, pathog.drain.parts)
 }
 
+df.drain <- pathog.drain.parts.all %>% dplyr::select(-iteration) %>% group_by(drain) %>% summarise(pathog_sum = sum(pathogens))
 
-
-patho.part[i, ] <- c(ex_decay(pathoN01, df$time[df$iteration == u & df$drain == v]), v)
-
-for (v in df$drain[df$iteration == u]){
-        print(v)
-}
-
-
-patho.part[1, ] <- c(ex_decay(path.drain[[1]][1], df$time[df$iteration == 1 & df$drain == 14]), 14)
-patho.part[2, ] <- c(ex_decay(patho.part[1,1], df$time[df$iteration == 1 & df$drain == 2]), 2)
-patho.part[3, ] <- c(ex_decay(patho.part[2,1], df$time[df$iteration == 1 & df$drain == 1]), 1)
-
-patho.part[4, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 1]), 1)
-patho.part[5, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 2]), 2)
-patho.part[6, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 3]), 3)
-patho.part[7, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 4]), 4)
-patho.part[8, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 5]), 5)
-patho.part[9, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 6]), 6)
-patho.part[10, ] <- c(ex_decay(path.drain[[2]][1], df$time[df$iteration == 2 & df$drain == 22]), 22)
-
-sum(patho.part$patho[patho.part$drain == 1])
-sum(patho.part$patho[patho.part$drain == 2])
-sum(patho.part$patho[patho.part$drain == 3])
